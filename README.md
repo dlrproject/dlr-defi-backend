@@ -1,4 +1,15 @@
 # defi **(backend)**
+下面是开发过程，不是使用教程
+1.安装go，请自行百度，安装完成后 go version会有返回值。
+一定要注意go的版本，过于低的版本会缺失模块管理功能，至少17版本
+2.安装gin：go get -u github.com/gin-gonic/gin
+3.使用gin开发前后端交互逻辑，代码在main.go里
+4.
+
+
+
+
+
 
 ### raffle 奖池
 
