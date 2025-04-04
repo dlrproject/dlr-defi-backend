@@ -3,6 +3,8 @@ package main
 import (
 	"dlr-defi-backend/modules"
 
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -19,10 +21,6 @@ func main() {
 	if error != nil {
 		print("error")
 	}
-	test := modules.Test{
-		Test: "hi",
-	}
-	db.Create(&test)
 
 	r := gin.Default()
 	r.GET("/", func(ctx *gin.Context) {
@@ -30,23 +28,56 @@ func main() {
 			"success": true,
 		})
 	})
-	aa := &Article{
-		Title: "1",
-		Desc:  "2",
-	}
-	r.GET("/json2", func(ctx *gin.Context) {
-		ctx.JSON(200, aa)
+
+	r.GET("/dex/liquidity/findAllTokens", func(ctx *gin.Context) {
+		allTokens := []modules.Tokens{}
+		db.Find(&allTokens)
+		ctx.JSON(200, gin.H{
+			"result": allTokens,
+		})
 	})
 
-	//创建流动性
-	r.POST("/liquidity/create", func(ctx *gin.Context) {
-		ctx.JSON(200, aa)
+	r.GET("/dex/liquidity/getMatchAmount", func(ctx *gin.Context) {
+		tokenId0 := ctx.Query("tokenId0")
+		tokenIdInt0, err0 := strconv.ParseUint(tokenId0, 10, 64)
+		if err0 != nil {
+			return
+		}
+		tokenId1 := ctx.Query("tokenId1")
+		tokenIdInt1, err1 := strconv.ParseUint(tokenId1, 10, 64)
+		if err1 != nil {
+			return
+		}
+
+		pairs := []modules.Pairs{}
+		db.Where("token0_id=? and token1_id=?", tokenIdInt0, tokenIdInt1).Find(&pairs)
+
+		ctx.JSON(200, gin.H{
+			"result": pairs,
+		})
 	})
 
-	//添加流动性
-	r.GET("/liquidity/add", func(ctx *gin.Context) {
-		ctx.JSON(200, aa)
+	r.GET("/dex/liquidity/getAnotherTokenInfoByTokenId", func(ctx *gin.Context) {
+		tokenId := ctx.Query("tokenId")
+		tokenIdInt, err := strconv.ParseUint(tokenId, 10, 64)
+		if err != nil {
+			return
+		}
+		pairs := []modules.Pairs{}
+		db.Where("token0_id=?", tokenIdInt).Find(&pairs)
+
+		ids := []uint64{}
+		for _, pair := range pairs {
+			ids = append(ids, pair.Token1Id)
+		}
+
+		allTokens := []modules.Tokens{}
+		db.Where("id in(?)", ids).Find(&allTokens)
+		ctx.JSON(200, gin.H{
+			"result": allTokens,
+		})
 	})
-	r.Run()
+
+	r.Run("0.0.0.0:8080")
 
 }
