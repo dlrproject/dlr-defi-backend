@@ -1,83 +1,59 @@
 package main
 
 import (
-	"dlr-defi-backend/modules"
+	"dlr-defi-backend/controllers"
+	"net/http"
 
-	"strconv"
+	docs "dlr-defi-backend/docs"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-type Article struct {
-	Title string `json:"title"`
-	Desc  string `json:"desc"`
+// @BasePath
+
+// PingExample godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} Helloworld
+// @Router /helloworld [get]
+func Helloworld(g *gin.Context) {
+	g.JSON(http.StatusOK, "helloworld")
 }
 
+// @Title main方法
 func main() {
-	dsn := "root:123456@tcp(192.168.31.134:3306)/dlr-backend?charset=utf8mb4&parseTime=True&loc=Local"
-	db, error := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if error != nil {
-		print("error")
-	}
+	//获取数据库对象DB,逻辑在dlr-defi-backend/modules，通过init方法
 
+	//获取router
 	r := gin.Default()
+	//欢迎页面
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"success": true,
 		})
 	})
 
-	r.GET("/dex/liquidity/findAllTokens", func(ctx *gin.Context) {
-		allTokens := []modules.Tokens{}
-		db.Find(&allTokens)
-		ctx.JSON(200, gin.H{
-			"result": allTokens,
-		})
-	})
+	r.GET("/dex/liquidity/findAllTokens", controllers.FindAllTokens)
 
-	r.GET("/dex/liquidity/getMatchAmount", func(ctx *gin.Context) {
-		tokenId0 := ctx.Query("tokenId0")
-		tokenIdInt0, err0 := strconv.ParseUint(tokenId0, 10, 64)
-		if err0 != nil {
-			return
-		}
-		tokenId1 := ctx.Query("tokenId1")
-		tokenIdInt1, err1 := strconv.ParseUint(tokenId1, 10, 64)
-		if err1 != nil {
-			return
-		}
+	r.GET("/dex/liquidity/getMatchAmount", controllers.GetMatchAmount)
 
-		pairs := []modules.Pairs{}
-		db.Where("token0_id=? and token1_id=?", tokenIdInt0, tokenIdInt1).Find(&pairs)
+	r.GET("/dex/liquidity/getAnotherTokenInfoByTokenId", controllers.GetAnotherTokenInfoByTokenId)
 
-		ctx.JSON(200, gin.H{
-			"result": pairs,
-		})
-	})
+	r.GET("/helloworld", Helloworld)
 
-	r.GET("/dex/liquidity/getAnotherTokenInfoByTokenId", func(ctx *gin.Context) {
-		tokenId := ctx.Query("tokenId")
-		tokenIdInt, err := strconv.ParseUint(tokenId, 10, 64)
-		if err != nil {
-			return
-		}
-		pairs := []modules.Pairs{}
-		db.Where("token0_id=?", tokenIdInt).Find(&pairs)
+	//初始化swagger文档
+	docs.SwaggerInfo.BasePath = ""
 
-		ids := []uint64{}
-		for _, pair := range pairs {
-			ids = append(ids, pair.Token1Id)
-		}
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler,
+		ginSwagger.PersistAuthorization(true)))
 
-		allTokens := []modules.Tokens{}
-		db.Where("id in(?)", ids).Find(&allTokens)
-		ctx.JSON(200, gin.H{
-			"result": allTokens,
-		})
-	})
-
+	//启动项目
 	r.Run("0.0.0.0:8080")
 
 }

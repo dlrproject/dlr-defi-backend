@@ -1,0 +1,82 @@
+info:
+  contact: {}
+  title: main方法
+paths:
+  /dex/liquidity/findAllTokens:
+    get:
+      consumes:
+      - application/json
+      description: 拿所有的代币信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: 拿所有的代币信息
+      tags:
+      - example
+  /dex/liquidity/getAnotherTokenInfoByTokenId:
+    get:
+      consumes:
+      - application/json
+      description: 通过代币id拿 与之相对的 另外一个代币的信息
+      parameters:
+      - description: tokenId
+        in: query
+        name: tokenId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: 通过代币id拿 与之相对的 另外一个代币的信息
+      tags:
+      - example
+  /dex/liquidity/getMatchAmount:
+    get:
+      consumes:
+      - application/json
+      description: 拿代币对信息
+      parameters:
+      - description: tokenId0
+        in: query
+        name: tokenId0
+        required: true
+        type: string
+      - description: tokenId1
+        in: query
+        name: tokenId1
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: 拿代币对信息
+      tags:
+      - example
+  /helloworld:
+    get:
+      consumes:
+      - application/json
+      description: do ping
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: ping example
+      tags:
+      - example
+swagger: "2.0"
